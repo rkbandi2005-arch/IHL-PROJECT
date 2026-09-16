@@ -2,12 +2,25 @@ import sqlite3
 import json
 import random
 import string
+import os
+import shutil
 from datetime import datetime, timedelta
 
-DB_NAME = "campus_events.db"
+def get_db_path():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    local_db = os.path.join(base_dir, "campus_events.db")
+    if os.environ.get("VERCEL"):
+        tmp_db = "/tmp/campus_events.db"
+        if not os.path.exists(tmp_db) and os.path.exists(local_db):
+            try:
+                shutil.copy2(local_db, tmp_db)
+            except Exception:
+                pass
+        return tmp_db
+    return local_db
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     return conn
 
