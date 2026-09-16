@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseCampus - Premium Campus Event & Payment Platform</title>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <a href="#" class="brand-logo" onclick="switchView('explore')">
+      <div class="logo-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+      <span>PulseCampus</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a class="nav-item active" id="navExplore" onclick="switchView('explore')"><i class="fa-solid fa-compass"></i> Explore Events</a></li>
+      <li><a class="nav-item" id="navTickets" onclick="openMyTicketsModal()"><i class="fa-solid fa-ticket"></i> My Tickets</a></li>
+      <li><a class="nav-item" id="navOrganizer" onclick="openOrganizerModal()"><i class="fa-solid fa-wand-magic-sparkles"></i> Organizer Studio</a></li>
+      <li><a class="nav-item" id="navAnalytics" onclick="openAnalyticsModal()"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <button class="btn btn-outline" id="navAdminBtn" onclick="openAdminLoginModal()">
+        <i class="fa-solid fa-user-shield"></i> Admin Login
+      </button>
+      <button class="btn btn-primary" onclick="openCreateEventModal()">
+        <i class="fa-solid fa-plus"></i> Host Event
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-container">
+    <div class="hero-banner">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <i class="fa-solid fa-sparkles"></i> Campus Event Experience 2026
+        </div>
+        <h1 class="hero-title">Discover, Book & Experience Next-Gen Campus Events</h1>
+        <p class="hero-subtitle">
+          Join high-energy hackathons, neon cultural fests, esports showdowns, and masterclass workshops. Instant QR pass checkout with multi-payment gateway support.
+        </p>
+
+        <!-- Live Metrics Counter -->
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-icon"><i class="fa-solid fa-calendar-star"></i></div>
+            <div class="stat-info">
+              <div class="stat-number" id="statEventsCount">12+</div>
+              <div class="stat-label">Active Events</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-info">
+              <div class="stat-number" id="statAttendees">2.8k+</div>
+              <div class="stat-label">Attendees</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon"><i class="fa-solid fa-qrcode"></i></div>
+            <div class="stat-info">
+              <div class="stat-number" id="statTicketsSold">1,495</div>
+              <div class="stat-label">Tickets Issued</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon"><i class="fa-solid fa-shield-check"></i></div>
+            <div class="stat-info">
+              <div class="stat-number">100%</div>
+              <div class="stat-label">Instant Pass</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search & Filter Toolbar -->
+  <section class="toolbar-container">
+    <div class="glass-panel toolbar-glass">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search events by title, topic, speaker or venue..." onkeyup="filterEvents()">
+      </div>
+
+      <div class="category-pills" id="categoryPills">
+        <button class="pill-btn active" data-category="All" onclick="selectCategory(this)">All Events</button>
+        <button class="pill-btn" data-category="Tech & AI" onclick="selectCategory(this)"><i class="fa-solid fa-robot"></i> Tech & AI</button>
+        <button class="pill-btn" data-category="Cultural & Arts" onclick="selectCategory(this)"><i class="fa-solid fa-masks-theater"></i> Cultural & Arts</button>
+        <button class="pill-btn" data-category="Esports & Gaming" onclick="selectCategory(this)"><i class="fa-solid fa-gamepad"></i> Esports</button>
+        <button class="pill-btn" data-category="Talks & Workshops" onclick="selectCategory(this)"><i class="fa-solid fa-chalkboard-user"></i> Workshops</button>
+        <button class="pill-btn" data-category="Sports" onclick="selectCategory(this)"><i class="fa-solid fa-trophy"></i> Sports</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Event Grid Section -->
+  <main class="main-content">
+    <div class="section-header">
+      <h2 class="section-title"><i class="fa-solid fa-fire"></i> Featured Events</h2>
+      <button class="btn btn-glass btn-sm" onclick="fetchEvents()"><i class="fa-solid fa-arrows-rotate"></i> Refresh Feed</button>
+    </div>
+
+    <!-- Dynamic Events Grid -->
+    <div class="events-grid" id="eventsGrid">
+      <!-- Dynamic JS Content -->
+      <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+        <div class="spinner" style="margin: 0 auto 1rem auto;"></div>
+        <p style="color: var(--text-secondary);">Loading Campus Events...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Event Detail & Booking Modal -->
+  <div class="modal-overlay" id="eventDetailModal">
+    <div class="modal-container glass-panel">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalEventTitle">Event Details</h3>
+        <button class="close-btn" onclick="closeModal('eventDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="event-detail-banner">
+          <img id="modalEventImg" src="" alt="Event Banner">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+          <div>
+            <span class="card-category" id="modalEventCategory">Category</span>
+            <h2 style="color: #fff; margin-top: 4px;" id="modalEventHeading">Event Name</h2>
+          </div>
+          <span class="badge badge-featured" id="modalEventBadge">Upcoming</span>
+        </div>
+
+        <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;" id="modalEventDesc">
+          Event detailed description...
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: var(--radius-md);">
+          <div>
+            <small style="color: var(--text-muted); display: block;">DATE & TIME</small>
+            <strong style="color: #fff;" id="modalEventDateTime">Oct 15, 2026 | 09:00 AM</strong>
+          </div>
+          <div>
+            <small style="color: var(--text-muted); display: block;">VENUE</small>
+            <strong style="color: #fff;" id="modalEventVenue">Grand Auditorium</strong>
+          </div>
+          <div>
+            <small style="color: var(--text-muted); display: block;">ORGANIZER</small>
+            <strong style="color: #fff;" id="modalEventOrganizer">ACM Chapter</strong>
+          </div>
+        </div>
+
+        <!-- Ticket Tier Selector -->
+        <h4 style="color: #fff; margin-bottom: 0.8rem;">Select Ticket Pass Tier</h4>
+        <div class="ticket-tier-selector">
+          <div class="tier-card selected" id="tierGeneralCard" onclick="selectPassTier('General')">
+            <div class="tier-header">
+              <span class="tier-name">General Pass</span>
+              <span class="tier-price" id="modalGeneralPrice">₹299</span>
+            </div>
+            <small style="color: var(--text-muted);">Standard seating access, digital certificate & refreshment pass.</small>
+          </div>
+          <div class="tier-card" id="tierVIPCard" onclick="selectPassTier('VIP')">
+            <div class="tier-header">
+              <span class="tier-name">VIP Experience Pass</span>
+              <span class="tier-price" id="modalVIPPrice">₹599</span>
+            </div>
+            <small style="color: var(--text-muted);">Front row reserve seat, VIP lounge access, speaker meet-up & merch bag.</small>
+          </div>
+        </div>
+
+        <!-- Quantity Picker -->
+        <div class="qty-picker">
+          <span style="color: #fff; font-weight: 600;">Number of Tickets:</span>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="changeTicketQty(-1)"><i class="fa-solid fa-minus"></i></button>
+            <span id="ticketQtyCount" style="color: #fff; font-weight: 800; font-size: 1.2rem; width: 30px; text-align: center;">1</span>
+            <button class="qty-btn" onclick="changeTicketQty(1)"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-glass);">
+          <div>
+            <small style="color: var(--text-muted);">TOTAL PAYABLE AMOUNT</small>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #fff;" id="modalTotalPrice">₹299.00</div>
+          </div>
+          <button class="btn btn-primary" style="padding: 0.9rem 2rem;" onclick="proceedToCheckoutModal()">
+            Proceed to Payment <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Payment Gateway & Checkout Modal -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-container glass-panel" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-shield-halved" style="color: var(--accent-emerald);"></i> PulsePay Gateway</h3>
+        <button class="close-btn" onclick="closeModal('paymentModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="position: relative;">
+
+        <!-- Loading spinner overlay -->
+        <div class="loading-spinner-overlay" id="paymentLoadingOverlay" style="display: none;">
+          <div class="spinner"></div>
+          <p style="color: #fff; margin-top: 1rem; font-weight: 600;" id="paymentStatusText">Verifying Payment with Bank Gateway...</p>
+        </div>
+
+        <!-- Student Contact Info -->
+        <h4 style="color: #fff; margin-bottom: 1rem;">1. Student & Ticket Holder Information</h4>
+        <div class="form-grid" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label>Full Student Name *</label>
+            <input type="text" id="payStudentName" class="form-control" placeholder="e.g. Alex Morgan" value="Alex Morgan">
+          </div>
+          <div class="form-group">
+            <label>Campus Email Address *</label>
+            <input type="email" id="payStudentEmail" class="form-control" placeholder="alex@campus.edu" value="alex.morgan@campus.edu">
+          </div>
+          <div class="form-group">
+            <label>Student Roll / Registration ID *</label>
+            <input type="text" id="payStudentId" class="form-control" placeholder="e.g. CS2026-904" value="CS2026-904">
+          </div>
+          <div class="form-group">
+            <label>Promo / Discount Coupon Code</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="payCouponInput" class="form-control" placeholder="Try: CAMPUS2026" style="text-transform: uppercase;">
+              <button class="btn btn-glass btn-sm" onclick="applyDiscountCoupon()">Apply</button>
+            </div>
+            <small style="color: var(--accent-emerald);" id="couponFeedbackMsg"></small>
+          </div>
+        </div>
+
+        <!-- Payment Method Tabs -->
+        <h4 style="color: #fff; margin-bottom: 1rem;">2. Select Payment Method</h4>
+        <div class="payment-tabs">
+          <div class="pay-tab active" id="tabUPI" onclick="switchPaymentMethod('UPI')">
+            <i class="fa-solid fa-qrcode"></i> UPI / QR Scan
+          </div>
+          <div class="pay-tab" id="tabCard" onclick="switchPaymentMethod('Card')">
+            <i class="fa-solid fa-credit-card"></i> Card (Debit/Credit)
+          </div>
+          <div class="pay-tab" id="tabWallet" onclick="switchPaymentMethod('Wallet')">
+            <i class="fa-solid fa-wallet"></i> Campus Pay
+          </div>
+        </div>
+
+        <!-- Payment View: UPI QR Code -->
+        <div id="payViewUPI" class="pay-view-content">
+          <div class="upi-box">
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Scan this QR code with any GPay, PhonePe, Paytm or UPI App</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=pulse@campus&pn=PulseCampusEvents" alt="UPI QR Code" class="qr-code-img">
+            <div style="font-family: monospace; color: var(--secondary); background: rgba(0,0,0,0.4); display: inline-block; padding: 0.4rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
+              UPI ID: pulse@campus (Auto Verified)
+            </div>
+            <p style="font-size: 0.85rem; color: var(--accent-amber);"><i class="fa-solid fa-clock"></i> Session expires in <span id="upiTimer">04:59</span></p>
+          </div>
+        </div>
+
+        <!-- Payment View: Credit / Debit Card -->
+        <div id="payViewCard" class="pay-view-content" style="display: none;">
+          <!-- Interactive Live Preview Card -->
+          <div class="card-preview">
+            <div class="card-top">
+              <div class="card-chip"></div>
+              <div class="card-logo">PULSE CARD</div>
+            </div>
+            <div class="card-number-display" id="cardNumPreview">•••• •••• •••• 4242</div>
+            <div class="card-bottom">
+              <div class="card-holder-display">
+                <label>CARD HOLDER</label>
+                <val id="cardHolderPreview">ALEX MORGAN</val>
+              </div>
+              <div class="card-exp-display">
+                <label>EXPIRES</label>
+                <val id="cardExpPreview">12/28</val>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Card Number</label>
+              <input type="text" id="cardNumInput" class="form-control" placeholder="4242 4242 4242 4242" maxlength="19" oninput="updateCardPreview()">
+            </div>
+            <div class="form-group">
+              <label>Expiry Date (MM/YY)</label>
+              <input type="text" id="cardExpInput" class="form-control" placeholder="12/28" maxlength="5" oninput="updateCardPreview()">
+            </div>
+            <div class="form-group">
+              <label>CVV / CVC Code</label>
+              <input type="password" id="cardCvvInput" class="form-control" placeholder="•••" maxlength="4">
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment View: Campus Wallet -->
+        <div id="payViewWallet" class="pay-view-content" style="display: none;">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5rem; border-radius: var(--radius-md); text-align: center;">
+            <i class="fa-solid fa-building-columns" style="font-size: 2.5rem; color: var(--accent-emerald); margin-bottom: 0.8rem;"></i>
+            <h4 style="color: #fff;">Campus Student Digital Wallet</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.4rem;">Balance available: <strong>₹5,400.00</strong> (Auto Linked via Student ID)</p>
+          </div>
+        </div>
+
+        <!-- Total Breakdown & Final Pay Button -->
+        <div style="margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border-glass);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 6px;">
+            <span>Subtotal:</span>
+            <span id="paySubtotal">₹299.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--accent-emerald); margin-bottom: 12px;">
+            <span>Discount Applied:</span>
+            <span id="payDiscount">-₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem;">
+            <span>Total Amount:</span>
+            <span id="payFinalTotal">₹299.00</span>
+          </div>
+
+          <button class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;" onclick="processPayment()">
+            <i class="fa-solid fa-lock"></i> Pay & Confirm Ticket Booking
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. E-Ticket & Receipt Printable Modal -->
+  <div class="modal-overlay" id="receiptModal">
+    <div class="modal-container glass-panel" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-emerald);"><i class="fa-solid fa-circle-check"></i> Booking Confirmed!</h3>
+        <button class="close-btn" onclick="closeModal('receiptModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="ticket-receipt">
+          <div class="ticket-header">
+            <div>
+              <div style="font-size: 0.8rem; color: var(--secondary); font-weight: 700; text-transform: uppercase;">PULSECAMPUS OFFICIAL ENTRY PASS</div>
+              <h2 style="color: #fff; margin-top: 4px;" id="recEventTitle">Event Title</h2>
+            </div>
+            <div class="ticket-ref" id="recRefCode">PULSE-89X21</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; font-size: 0.9rem;">
+            <div>
+              <small style="color: var(--text-muted); display: block;">ATTENDEE NAME</small>
+              <strong style="color: #fff; font-size: 1.05rem;" id="recStudentName">Alex Morgan</strong>
+            </div>
+            <div>
+              <small style="color: var(--text-muted); display: block;">STUDENT ROLL ID</small>
+              <strong style="color: #fff; font-size: 1.05rem;" id="recStudentId">CS2026-904</strong>
+            </div>
+            <div>
+              <small style="color: var(--text-muted); display: block;">TICKET CLASS & QTY</small>
+              <strong style="color: var(--primary);" id="recTicketType">General Pass (x1)</strong>
+            </div>
+            <div>
+              <small style="color: var(--text-muted); display: block;">DATE & VENUE</small>
+              <strong style="color: #fff;" id="recVenueDate">Oct 15, 2026 @ Grand Auditorium</strong>
+            </div>
+          </div>
+
+          <div class="ticket-qr-section">
+            <img id="recQRImg" src="" alt="Ticket QR Pass" style="width: 110px; height: 110px; border-radius: 8px; border: 2px solid #fff;">
+            <div>
+              <div style="color: #fff; font-weight: 700; margin-bottom: 4px;">Security Scan Pass</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                Present this QR code at the event check-in gate. Non-transferable ticket pass.
+              </p>
+              <div style="margin-top: 8px; font-size: 0.85rem; color: var(--accent-emerald);">
+                <i class="fa-solid fa-check-double"></i> Verified Payment via <span id="recPayMethod">Card</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+          <button class="btn btn-outline" style="flex: 1;" onclick="closeModal('receiptModal')">Close Pass</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Student "My Tickets" Portal Modal -->
+  <div class="modal-overlay" id="myTicketsModal">
+    <div class="modal-container glass-panel" style="max-width: 850px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-ticket" style="color: var(--primary);"></i> My Ticket Passes</h3>
+        <button class="close-btn" onclick="closeModal('myTicketsModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+          <input type="text" id="myTicketsEmailInput" class="form-control" placeholder="Enter your email or Roll ID (e.g. alex.morgan@campus.edu)" value="alex.morgan@campus.edu">
+          <button class="btn btn-primary" onclick="loadUserTickets()"><i class="fa-solid fa-magnifying-glass"></i> Find Passes</button>
+        </div>
+
+        <div id="userTicketsList" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Loaded dynamically -->
+          <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Click "Find Passes" to search tickets registered under your email or ID.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Organizer Studio & Create Event Modal -->
+  <div class="modal-overlay" id="organizerModal">
+    <div class="modal-container glass-panel" style="max-width: 850px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--secondary);"></i> Organizer Studio</h3>
+        <button class="close-btn" onclick="closeModal('organizerModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="payment-tabs" style="margin-bottom: 1.5rem;">
+          <div class="pay-tab active" id="orgTabPublish" onclick="switchOrganizerTab('publish')">
+            <i class="fa-solid fa-plus-circle"></i> Publish New Event
+          </div>
+          <div class="pay-tab" id="orgTabManage" onclick="switchOrganizerTab('manage')">
+            <i class="fa-solid fa-list-check"></i> Manage Active Listings
+          </div>
+        </div>
+
+        <!-- Tab 1: Publish Form -->
+        <div id="orgViewPublish">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h4 style="color: #fff;">Publish New Event</h4>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Fill in all parameters to launch instantly</span>
+          </div>
+
+          <form id="createEventForm" onsubmit="handleCreateEventSubmit(event)">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Event Title *</label>
+                <input type="text" id="newEventTitle" class="form-control" placeholder="e.g. Hackathon 2026: Build the Future" required>
+              </div>
+              <div class="form-group">
+                <label>Category *</label>
+                <select id="newEventCategory" class="form-control" required>
+                  <option value="Tech & AI">Tech & AI</option>
+                  <option value="Cultural & Arts">Cultural & Arts</option>
+                  <option value="Esports & Gaming">Esports & Gaming</option>
+                  <option value="Talks & Workshops">Talks & Workshops</option>
+                  <option value="Sports">Sports</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Venue Location *</label>
+                <input type="text" id="newEventVenue" class="form-control" placeholder="e.g. Main Auditorium" required>
+              </div>
+              <div class="form-group">
+                <label>Event Date *</label>
+                <input type="date" id="newEventDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label>Timing *</label>
+                <input type="text" id="newEventTime" class="form-control" placeholder="e.g. 10:00 AM - 04:00 PM" required>
+              </div>
+              <div class="form-group">
+                <label>General Pass Price (₹) *</label>
+                <input type="number" id="newEventPrice" class="form-control" placeholder="0 for Free" min="0" value="199" required>
+              </div>
+              <div class="form-group">
+                <label>VIP Pass Price (₹)</label>
+                <input type="number" id="newEventVIPPrice" class="form-control" placeholder="499" min="0" value="499">
+              </div>
+              <div class="form-group">
+                <label>Capacity Seat Limit *</label>
+                <input type="number" id="newEventCapacity" class="form-control" placeholder="300" min="1" value="250" required>
+              </div>
+              <div class="form-group">
+                <label>Organizer Department Name</label>
+                <input type="text" id="newEventOrganizer" class="form-control" placeholder="e.g. Robotics Club" value="Campus Innovation Cell">
+              </div>
+              <div class="form-group full">
+                <label>Banner Image URL *</label>
+                <input type="url" id="newEventImgUrl" class="form-control" placeholder="https://images.unsplash.com/photo-..." value="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80" required>
+              </div>
+              <div class="form-group full">
+                <label>Detailed Description *</label>
+                <textarea id="newEventDesc" class="form-control" rows="3" placeholder="Explain event highlights, eligibility, prize pool, or speaker details..." required></textarea>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; margin-top: 1rem;">
+              <i class="fa-solid fa-paper-plane"></i> Publish Campus Event Instantly
+            </button>
+          </form>
+        </div>
+
+        <!-- Tab 2: Manage Listings List -->
+        <div id="orgViewManage" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h4 style="color: #fff;">Active Campus Listings</h4>
+            <button class="btn btn-glass btn-sm" onclick="loadOrganizerEventsList()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+          </div>
+          <div id="organizerListingsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Rendered dynamically via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Analytics Dashboard Modal -->
+  <div class="modal-overlay" id="analyticsModal">
+    <div class="modal-container glass-panel" style="max-width: 850px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-chart-pie" style="color: var(--accent-amber);"></i> Platform Analytics & Revenue</h3>
+        <button class="close-btn" onclick="closeModal('analyticsModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); padding: 1.2rem; border-radius: var(--radius-md);">
+            <small style="color: var(--text-muted);">TOTAL REVENUE</small>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #fff;" id="anTotalRevenue">₹0.00</div>
+          </div>
+          <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); padding: 1.2rem; border-radius: var(--radius-md);">
+            <small style="color: var(--text-muted);">TICKETS ISSUED</small>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #fff;" id="anTicketsSold">0</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.2rem; border-radius: var(--radius-md);">
+            <small style="color: var(--text-muted);">BOOKING TRANSACTIONS</small>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #fff;" id="anTotalBookings">0</div>
+          </div>
+        </div>
+
+        <h4 style="color: #fff; margin-bottom: 1rem;">Events by Category Breakdown</h4>
+        <div id="anCategoryBars" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 2rem;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div style="text-align: center; border-top: 1px solid var(--border-glass); padding-top: 1rem;">
+          <button class="btn btn-glass btn-sm" onclick="reSeedData()"><i class="fa-solid fa-rotate-left"></i> Reset & Re-Seed Sample Database</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Custom JavaScript -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

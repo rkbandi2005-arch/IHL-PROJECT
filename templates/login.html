@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseCampus - Authentication Portal</title>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.15), transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.15), transparent 40%);
+    }
+
+    .login-nav-top {
+      position: absolute;
+      top: 1.5rem;
+      left: 2rem;
+      right: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .login-card-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 2.8rem;
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .brand-top {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand-top .logo-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem auto;
+      font-size: 2rem;
+      background: var(--gradient-primary);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+    }
+
+    .role-pills {
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    .role-pill-btn {
+      flex: 1;
+      padding: 0.55rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.82rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .role-pill-btn.active {
+      background: var(--gradient-primary);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .pass-input-wrapper {
+      position: relative;
+    }
+
+    .toggle-pass-icon {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .toggle-pass-icon:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <div class="login-nav-top">
+    <a href="/main" class="brand-logo" style="text-decoration: none;">
+      <div class="logo-icon" style="width: 40px; height: 40px; font-size: 1.2rem;"><i class="fa-solid fa-bolt-lightning"></i></div>
+      <span>PulseCampus</span>
+    </a>
+    <a href="/credentials" class="btn btn-glass btn-sm">
+      <i class="fa-solid fa-shield-halved"></i> Credentials Directory
+    </a>
+  </div>
+
+  <!-- Login Card Container -->
+  <div class="login-card-container">
+    <div class="brand-top">
+      <div class="brand-logo" style="justify-content: center; margin-bottom: 0.8rem;">
+        <div class="logo-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+      </div>
+      <h2 style="color: #fff; font-size: 1.6rem; font-weight: 800;">Campus Sign In</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
+        Access event analytics, attendee passes, and administrative controls.
+      </p>
+    </div>
+
+    <!-- Quick Role Selector Tabs -->
+    <div class="role-pills">
+      <button type="button" class="role-pill-btn active" id="tabAdmin" onclick="selectRoleTab('admin@campus.edu', 'tabAdmin')">
+        <i class="fa-solid fa-crown"></i> Admin
+      </button>
+      <button type="button" class="role-pill-btn" id="tabOrg" onclick="selectRoleTab('organizer@campus.edu', 'tabOrg')">
+        <i class="fa-solid fa-bullhorn"></i> Organizer
+      </button>
+      <button type="button" class="role-pill-btn" id="tabStudent" onclick="selectRoleTab('student@campus.edu', 'tabStudent')">
+        <i class="fa-solid fa-user-graduate"></i> Student
+      </button>
+    </div>
+
+    <!-- Alert / Toast display inside login card -->
+    <div id="loginAlert" style="display: none; padding: 0.85rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem; margin-bottom: 1.2rem;"></div>
+
+    <form id="standaloneLoginForm" onsubmit="submitStandaloneLogin(event)">
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Email or Username *</label>
+        <div class="search-box" style="margin-top: 4px;">
+          <i class="fa-solid fa-user" style="left: 1rem; color: var(--secondary);"></i>
+          <input type="text" id="loginUser" class="search-input" style="padding-left: 2.8rem;" placeholder="Enter your email or username" required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.4rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Password *</label>
+          <a href="/credentials" style="color: var(--accent-cyan); font-size: 0.8rem; text-decoration: none;">
+            <i class="fa-solid fa-lock"></i> Protected Credentials
+          </a>
+        </div>
+        <div class="search-box pass-input-wrapper">
+          <i class="fa-solid fa-lock" style="left: 1rem; color: var(--secondary);"></i>
+          <input type="password" id="loginPass" class="search-input" style="padding-left: 2.8rem; padding-right: 2.8rem;" placeholder="••••••••" required autocomplete="current-password">
+          <i class="fa-solid fa-eye toggle-pass-icon" id="eyeIcon" onclick="togglePasswordVisibility()"></i>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
+        </label>
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; font-size: 1.05rem; margin-bottom: 1.2rem; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard
+      </button>
+    </form>
+
+    <!-- Link to Credentials Directory Page -->
+    <div style="background: rgba(6, 182, 212, 0.1); border: 1px dashed rgba(6, 182, 212, 0.3); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-bottom: 1.5rem;">
+      <div style="color: #fff; font-weight: 700; margin-bottom: 4px;">
+        <i class="fa-solid fa-key" style="color: var(--accent-cyan);"></i> Need Login Credentials?
+      </div>
+      <p style="font-size: 0.82rem; margin-bottom: 8px;">View all demo account usernames, passwords, and access permissions.</p>
+      <a href="/credentials" class="btn btn-glass btn-sm" style="width: 100%; border-color: var(--accent-cyan); color: var(--accent-cyan); text-decoration: none;">
+        <i class="fa-solid fa-shield-halved"></i> Open Credentials Directory Page
+      </a>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="/main" style="color: var(--secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+        <i class="fa-solid fa-arrow-left"></i> Continue to Main Events Portal
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function selectRoleTab(placeholderEmail, tabId) {
+      document.getElementById('loginUser').placeholder = placeholderEmail;
+      document.querySelectorAll('.role-pill-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('loginPass');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.className = 'fa-solid fa-eye-slash toggle-pass-icon';
+      } else {
+        passInput.type = 'password';
+        eyeIcon.className = 'fa-solid fa-eye toggle-pass-icon';
+      }
+    }
+
+    async function submitStandaloneLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value.trim();
+      const alertBox = document.getElementById('loginAlert');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user, password: pass })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('pulseAdmin', JSON.stringify(data.user));
+          alertBox.style.display = 'block';
+          alertBox.style.background = 'rgba(16, 185, 129, 0.15)';
+          alertBox.style.border = '1px solid var(--accent-emerald)';
+          alertBox.style.color = '#fff';
+          alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> Welcome ' + data.user.full_name + '! Redirecting...';
+
+          setTimeout(() => {
+            window.location.href = '/main?adminLoggedIn=1';
+          }, 800);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard';
+          alertBox.style.display = 'block';
+          alertBox.style.background = 'rgba(244, 63, 94, 0.15)';
+          alertBox.style.border = '1px solid var(--accent-rose)';
+          alertBox.style.color = '#fff';
+          alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${data.error || 'Authentication failed.'}`;
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard';
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(244, 63, 94, 0.15)';
+        alertBox.style.border = '1px solid var(--accent-rose)';
+        alertBox.style.color = '#fff';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Network error. Please try again.';
+      }
+    }
+  </script>
+</body>
+</html>
