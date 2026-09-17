@@ -90,6 +90,9 @@
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="Search events by title, topic, speaker or venue..." onkeyup="filterEvents()">
+        <button type="button" class="search-mic-btn" id="micSearchBtn" onclick="toggleVoiceSearch()" title="Search by Voice">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
       </div>
 
       <div class="category-pills" id="categoryPills">

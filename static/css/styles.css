@@ -402,18 +402,19 @@ h1, h2, h3, h4, h5, .brand-font {
   min-width: 280px;
 }
 
-.search-box i {
+.search-box i.fa-magnifying-glass {
   position: absolute;
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   font-size: 1.1rem;
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  padding: 0.8rem 3.2rem 0.8rem 2.8rem;
   border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-glass);
@@ -426,6 +427,51 @@ h1, h2, h3, h4, h5, .brand-font {
 .search-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.search-mic-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.search-mic-btn:hover {
+  color: #fff;
+  background: rgba(139, 92, 246, 0.25);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.search-mic-btn.listening {
+  color: #fff;
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  animation: micPulse 1.2s infinite alternate;
+}
+
+@keyframes micPulse {
+  0% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+  }
+  100% {
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 0 0 22px rgba(244, 63, 94, 0.9);
+  }
 }
 
 .category-pills {

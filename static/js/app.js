@@ -715,3 +715,86 @@ function showToast(msg, type = 'success') {
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
+
+/* --- VOICE SEARCH FUNCTIONALITY --- */
+
+let recognition = null;
+let isVoiceListening = false;
+
+function toggleVoiceSearch() {
+  const micBtn = document.getElementById('micSearchBtn');
+  const searchInput = document.getElementById('searchInput');
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    showToast('Voice search is not supported in this browser.', 'error');
+    return;
+  }
+
+  if (isVoiceListening && recognition) {
+    recognition.stop();
+    return;
+  }
+
+  try {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      isVoiceListening = true;
+      if (micBtn) {
+        micBtn.classList.add('listening');
+        micBtn.innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
+        micBtn.title = "Listening... Click to stop";
+      }
+      showToast('Listening... Speak your search query now.', 'success');
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      if (searchInput) {
+        searchInput.value = transcript;
+        filterEvents();
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech') {
+        showToast('No speech detected. Please try again.', 'error');
+      } else if (event.error === 'not-allowed') {
+        showToast('Microphone access was denied. Please allow microphone permissions.', 'error');
+      } else {
+        showToast('Voice search error: ' + event.error, 'error');
+      }
+      stopVoiceListeningUI();
+    };
+
+    recognition.onend = () => {
+      stopVoiceListeningUI();
+    };
+
+    recognition.start();
+
+  } catch (err) {
+    console.error('Failed to start speech recognition:', err);
+    showToast('Could not start voice search.', 'error');
+    stopVoiceListeningUI();
+  }
+}
+
+function stopVoiceListeningUI() {
+  isVoiceListening = false;
+  const micBtn = document.getElementById('micSearchBtn');
+  if (micBtn) {
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    micBtn.title = "Search by Voice";
+  }
+}
